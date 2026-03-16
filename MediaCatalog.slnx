@@ -1,0 +1,18 @@
+<Solution>
+    <Folder Name="/Solution Items/">
+        <File Path="DesignData/ToDoItems.db"/>
+        <File Path="Directory.Packages.props"/>
+        <File Path="Directory.Build.props"/>
+        <File Path="ReadMe.adoc"/>
+    </Folder>
+    <Folder Name="/Tests/">
+        <Project Path="tests/MediaCatalog.Tests/MediaCatalog.Tests.csproj"/>
+        <Project Path="tests/MediaCatalog.Shared.Tests/MediaCatalog.Shared.Tests.csproj"/>
+    </Folder>
+    <Project Path="src/MediaCatalog.Android/MediaCatalog.Android.csproj"/>
+    <Project Path="src/MediaCatalog.Browser/MediaCatalog.Browser.csproj"/>
+    <Project Path="src/MediaCatalog.Desktop/MediaCatalog.Desktop.csproj"/>
+    <Project Path="src/MediaCatalog.iOS/MediaCatalog.iOS.csproj"/>
+    <Project Path="src/MediaCatalog/MediaCatalog.csproj"/>
+    <Project Path="src/MediaCatalog.Shared/MediaCatalog.Shared.csproj"/>
+</Solution>

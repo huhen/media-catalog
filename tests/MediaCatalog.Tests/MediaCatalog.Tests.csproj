@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <!-- Disable trim warnings specifically in tests -->
+        <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="XUnit"/>
+        <PackageReference Include="xunit.runner.visualstudio"/>
+        <PackageReference Include="Avalonia.Headless.XUnit"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../src/MediaCatalog/MediaCatalog.csproj"/>
+    </ItemGroup>
+</Project>
