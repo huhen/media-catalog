@@ -101,6 +101,8 @@ public partial class App : Application
             {
                 services.AddSingleton<IDatabaseService, DesignDbService>();
             }
+            
+            services.AddSingleton<YandexMusicService>();
 
             Services = services.BuildServiceProvider();
 

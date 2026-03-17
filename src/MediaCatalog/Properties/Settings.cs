@@ -53,6 +53,18 @@ public class Settings : INotifyPropertyChanged
         set => SetField(ref field, value);
     } = new Color(0xFF, 0xCC, 0x4D, 0x11); // Avalonia-NightTime https://theme.xaml.live
 
+    public string YandexMusicToken
+    {
+        get;
+        set => SetField(ref field, value);
+    } = "";
+
+    public string YandexMusicUsername
+    {
+        get;
+        set => SetField(ref field, value);
+    } = "";
+
     /// <inheritdoc/>
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -124,6 +136,8 @@ public class Settings : INotifyPropertyChanged
             {
                 Default.AccentColor = settings.AccentColor;
                 Default.AppTheme = settings.AppTheme;
+                Default.YandexMusicToken = settings.YandexMusicToken;
+                Default.YandexMusicUsername = settings.YandexMusicUsername;
             }
         }
         catch (Exception exception)

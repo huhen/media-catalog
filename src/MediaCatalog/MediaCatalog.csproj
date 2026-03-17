@@ -29,8 +29,10 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
+        <PackageReference Include="CSharpFunctionalExtensions" />
         <PackageReference Include="Dapper.AOT"/>
         <PackageReference Include="DynamicData"/>
+        <PackageReference Include="KM.Yandex.Music.Api" />
         <PackageReference Include="Microsoft.Data.Sqlite"/>
         <PackageReference Include="Dapper"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection"/>

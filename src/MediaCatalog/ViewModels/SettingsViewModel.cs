@@ -3,10 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Avalonia.Data;
+using Avalonia.Media;
 using MediaCatalog.Helper;
 using MediaCatalog.Messages;
 using MediaCatalog.Models;
 using MediaCatalog.Properties;
+using MediaCatalog.Services;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -22,10 +25,24 @@ namespace MediaCatalog.ViewModels;
 /// </summary>
 public partial class SettingsViewModel : ViewModelBase, IDialogParticipant
 {
+    private readonly YandexMusicService _yandexMusicService;
+
     /// <summary>
     /// Gets the application settings instance for binding to UI controls.
     /// </summary>
     public Settings Settings => Settings.Default;
+
+    /// <summary>
+    /// Gets whether the user is authenticated with Yandex Music.
+    /// </summary>
+    public bool IsAuthenticated => !string.IsNullOrEmpty(Settings.YandexMusicToken);
+
+    /// <summary>
+    /// Gets the authentication status text for display.
+    /// </summary>
+    public string AuthStatusText => IsAuthenticated
+        ? $"Авторизован: {Settings.YandexMusicUsername}"
+        : "Не авторизован";
 
     /// <summary>
     /// Array of available theme variants that users can select from.
@@ -37,6 +54,15 @@ public partial class SettingsViewModel : ViewModelBase, IDialogParticipant
         ThemeVariant.Dark.ToString(),
         ThemeVariant.Light.ToString()
     ];
+
+    public SettingsViewModel() : this(new YandexMusicService())
+    {
+    }
+
+    public SettingsViewModel(YandexMusicService yandexMusicService)
+    {
+        _yandexMusicService = yandexMusicService;
+    }
 
     /// <summary>
     /// A command that will export the entire database as Json-File
@@ -179,5 +205,95 @@ public partial class SettingsViewModel : ViewModelBase, IDialogParticipant
             WeakReferenceMessenger.Default.Send(new UpdateDataMessage<ToDoItem>(UpdateAction.Reset));
             WeakReferenceMessenger.Default.Send(new UpdateDataMessage<Category>(UpdateAction.Reset));
         }
+    }
+
+    [RelayCommand]
+    private async Task YandexAuthAsync()
+    {
+        var userNameTextBox = new Avalonia.Controls.TextBox
+        {
+            Watermark = "Логин (номер телефона или email)"
+        };
+        
+        var userNameInputPanel = new Avalonia.Controls.StackPanel
+        {
+            Spacing = 10,
+            Children =
+            {
+                new Avalonia.Controls.TextBlock { Text = "Введите ваш логин:" },
+                userNameTextBox
+            }
+        };
+        
+        await this.ShowOverlayDialogAsync<string>(
+            "Авторизация в Яндекс.Музыка",
+            userNameInputPanel,
+            DialogCommands.OkCancel);
+
+        var userName = userNameTextBox.Text;
+
+        if (string.IsNullOrWhiteSpace(userName))
+            return;
+
+        var authResult = await _yandexMusicService.CreateAuthSessionAsync(userName);
+
+        if (authResult.IsFailure)
+        {
+            await this.ShowOverlayDialogAsync<DialogResult>(
+                "Ошибка",
+                authResult.Error,
+                DialogCommands.Ok);
+            return;
+        }
+
+        var methods = authResult.Value.AvailableMethods.ToList();
+        
+        var selectedMethodHolder = new SelectedMethodHolder();
+        
+        var methodSelectionPanel = new Avalonia.Controls.StackPanel
+        {
+            Spacing = 10
+        };
+        
+        foreach (var method in methods)
+        {
+            var methodCopy = method;
+            var radioButton = new Avalonia.Controls.RadioButton
+            {
+                Content = method.GetDisplayName(),
+                GroupName = "AuthMethod",
+                Tag = methodCopy
+            };
+            
+            radioButton.Checked += (s, e) =>
+            {
+                selectedMethodHolder.SelectedMethod = methodCopy;
+            };
+            
+            methodSelectionPanel.Children.Add(radioButton);
+        }
+
+        var selectedMethod = await this.ShowOverlayDialogAsync<YandexAuthMethod>(
+            "Выберите способ авторизации",
+            methodSelectionPanel,
+            DialogCommands.OkCancel);
+
+        if (selectedMethod == default(YandexAuthMethod) && selectedMethodHolder.SelectedMethod != default(YandexAuthMethod))
+        {
+            selectedMethod = selectedMethodHolder.SelectedMethod;
+        }
+
+        if (selectedMethod == default(YandexAuthMethod))
+            return;
+
+        await this.ShowOverlayDialogAsync<DialogResult>(
+            "Выбран способ",
+            $"Вы выбрали: {selectedMethod.GetDisplayName()}",
+            DialogCommands.Ok);
+    }
+
+    private class SelectedMethodHolder
+    {
+        public YandexAuthMethod SelectedMethod { get; set; }
     }
 }

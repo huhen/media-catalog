@@ -33,6 +33,14 @@
                              IsAlphaVisible="False" />
             </controls:LabeledControl>
 
+            <!-- Yandex Music Authentication -->
+            <TextBlock Classes="h1" Text="Yandex Music" />
+            <Button HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding YandexAuthCommand}"
+                    Content="{Binding AuthStatusText}">
+            </Button>
+
             <!-- Options to Import or Export the TodoList -->
             <TextBlock Classes="h1" Text="Import / Export" />
             <Button HorizontalAlignment="Stretch"
