@@ -40,6 +40,11 @@
                     Command="{Binding YandexAuthCommand}"
                     Content="{Binding AuthStatusText}">
             </Button>
+            <Button HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding YandexQrAuthCommand}"
+                    Content="Авторизация по QR-коду">
+            </Button>
 
             <!-- Options to Import or Export the TodoList -->
             <TextBlock Classes="h1" Text="Import / Export" />

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
+using Newtonsoft.Json;
 
 namespace MediaCatalog.Services;
 
@@ -16,6 +17,113 @@ public enum YandexAuthMethod
     Social,
     WebAuthN,
     SmsCode,
+}
+
+public enum YAuthStatus
+{
+    Ok,
+    Error
+}
+
+public class YAuthBase
+{
+    public YAuthStatus Status { get; set; }
+
+    [JsonProperty("redirect_url")]
+    public string RedirectUrl { get; set; }
+
+    public List<YAuthError> Errors { get; set; }
+}
+
+public class YAuthError
+{
+    public string Field { get; set; }
+    public string Message { get; set; }
+}
+
+public class YAuthCaptcha
+{
+    public string CaptchaKey { get; set; }
+    public string ImageUrl { get; set; }
+    public string Url { get; set; }
+}
+
+public class YAuthQRStatus : YAuthBase
+{
+    [JsonProperty("default_uid")]
+    public int DefaultUid { get; set; }
+
+    public string RetPath { get; set; }
+
+    [JsonProperty("track_id")]
+    public string TrackId { get; set; }
+
+    public string Id { get; set; }
+
+    public string State { get; set; }
+
+    public YAuthCaptcha Captcha { get; set; }
+}
+
+public class YAccessToken
+{
+    [JsonProperty("status")]
+    public string Status { get; set; }
+
+    [JsonProperty("access_token")]
+    public string AccessToken { get; set; }
+
+    [JsonProperty("expires_in")]
+    public string Expires { get; set; }
+
+    [JsonProperty("token_type")]
+    public string TokenType { get; set; }
+
+    public string Uid { get; set; }
+}
+
+public class YLoginInfo
+{
+    public string Id { get; set; }
+    public string Login { get; set; }
+
+    [JsonProperty("client_id")]
+    public string ClientId { get; set; }
+
+    [JsonProperty("display_name")]
+    public string DisplayName { get; set; }
+
+    [JsonProperty("real_name")]
+    public string RealName { get; set; }
+
+    [JsonProperty("first_name")]
+    public string FirstName { get; set; }
+
+    [JsonProperty("last_name")]
+    public string LastName { get; set; }
+
+    public string Sex { get; set; }
+
+    [JsonProperty("default_email")]
+    public string DefaultEmail { get; set; }
+
+    public List<string> Emails { get; set; }
+
+    public string Birthday { get; set; }
+
+    [JsonProperty("default_avatar_id")]
+    public string DefaultAvatarId { get; set; }
+
+    [JsonProperty("is_avatar_empty")]
+    public bool IsAvatarEmpty { get; set; }
+
+    public string PsuId { get; set; }
+
+    public string AvatarUrl => IsAvatarEmpty
+        ? string.Empty
+        : $"https://avatars.mds.yandex.net/get-yapic/{DefaultAvatarId}/islands-200";
+
+    public string DisplayNameOrLogin => string.IsNullOrWhiteSpace(DisplayName) ? Login : DisplayName;
 }
 
 public static class YandexAuthMethodExtensions

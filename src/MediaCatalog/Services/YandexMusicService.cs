@@ -48,6 +48,50 @@ public class YandexMusicService
         }
     }
 
+    public async Task<Result<string, string>> GetAuthQRLinkAsync()
+    {
+        try
+        {
+            var qrLink = await _api.User.GetAuthQRLinkAsync(_storage);
+            return Result.Success<string, string>(qrLink);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<string, string>(ex.Message);
+        }
+    }
+
+    public async Task<Yandex.Music.Api.Models.Account.YAuthQRStatus> AuthorizeByQRAsync()
+    {
+        return await _api.User.AuthorizeByQRAsync(_storage);
+    }
+
+    public async Task<Result<Yandex.Music.Api.Models.Account.YAccessToken, string>> GetAccessTokenAsync()
+    {
+        try
+        {
+            var token = await _api.User.GetAccessTokenAsync(_storage);
+            return Result.Success<Yandex.Music.Api.Models.Account.YAccessToken, string>(token);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<Yandex.Music.Api.Models.Account.YAccessToken, string>(ex.Message);
+        }
+    }
+
+    public async Task<Result<Yandex.Music.Api.Models.Account.YLoginInfo, string>> GetLoginInfoAsync()
+    {
+        try
+        {
+            var loginInfo = await _api.User.GetLoginInfoAsync(_storage);
+            return Result.Success<Yandex.Music.Api.Models.Account.YLoginInfo, string>(loginInfo);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<Yandex.Music.Api.Models.Account.YLoginInfo, string>(ex.Message);
+        }
+    }
+
     private static YandexAuthMethod MapToYandexAuthMethod(Yandex.Music.Api.Models.Account.YAuthMethod apiMethod)
     {
         return apiMethod switch
