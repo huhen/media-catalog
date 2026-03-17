@@ -31,4 +31,18 @@
         <ProjectReference Include="../MediaCatalog/MediaCatalog.csproj"/>
     </ItemGroup>
 
+    <!--    <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-macos'">-->
+    <!--        <ApplicationIcon>Assets/app.icon</ApplicationIcon>-->
+    <!--    </PropertyGroup>-->
+
+    <!--    <ItemGroup>-->
+    <!--        <Resource Include="Assets\*.icon" Condition="'$(TargetFramework)' == 'net10.0-macos'"/>-->
+    <!--    </ItemGroup>-->
+    <PropertyGroup>
+        <ApplicationIcon>Assets/app.ico</ApplicationIcon>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Resource Include="Assets/*.ico"/>
+    </ItemGroup>
 </Project>
