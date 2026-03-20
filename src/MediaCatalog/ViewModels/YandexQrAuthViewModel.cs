@@ -114,15 +114,15 @@ public partial class YandexQrAuthViewModel : ViewModelBase, IDialogParticipant
             var isDarkTheme = Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
             if (isDarkTheme)
             {
-                foreach (var cmd in svgSource.Svg?.Model?.Commands?.OfType<DrawPathCanvasCommand>() ?? [])
-                {
-                    if (cmd.Paint?.Color is not null)
-                    {
-                        cmd.Paint.Color = new SKColor(255, 255, 255, 255);
-                    }
-                }
-
-                svgSource.RebuildFromModel();
+                // foreach (var cmd in svgSource.Svg?.Model?.Commands?.OfType<DrawPathCanvasCommand>() ?? [])
+                // {
+                //     if (cmd.Paint?.Color is not null)
+                //     {
+                //         cmd.Paint.Color = new SKColor(255, 255, 255, 255);
+                //     }
+                // }
+                //
+                // svgSource.RebuildFromModel();
             }
 
             return new SvgImage { Source = svgSource };
@@ -184,6 +184,26 @@ public partial class YandexQrAuthViewModel : ViewModelBase, IDialogParticipant
                 ErrorMessage = ex.Message;
                 StatusMessage = "Произошла ошибка при авторизации";
             }
+        }
+    }
+
+    [RelayCommand]
+    private void OpenAuthUrl()
+    {
+        if (!string.IsNullOrEmpty(QrCodeUrl))
+        {
+            try
+            {
+                if (QrCodeUrl.StartsWith("http"))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = QrCodeUrl,
+                        UseShellExecute = true
+                    });
+                }
+            }
+            catch { }
         }
     }
 
