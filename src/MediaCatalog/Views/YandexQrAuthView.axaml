@@ -7,27 +7,42 @@
              xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Svg.Controls.Skia.Avalonia"
              xmlns:services="clr-namespace:MediaCatalog.Shared.Services;assembly=MediaCatalog.Shared"
              xmlns:viewModels="clr-namespace:MediaCatalog.ViewModels"
-             Design.DataContext="{x:Static viewModels:YandexQrAuthViewModel}"
              d:DesignHeight="450"
              MinWidth="350"
              services:DialogManager.Register="{Binding}"
              x:DataType="viewModels:YandexQrAuthViewModel"
              mc:Ignorable="d">
-
+    
+    <Design.DataContext>
+        <viewModels:YandexQrAuthViewModel />
+    </Design.DataContext>
+    
     <StackPanel Spacing="15" Margin="20" HorizontalAlignment="Center">
         <TextBlock Text="Сканируйте QR-код в приложении Яндекс"
                    FontSize="16" 
                    TextAlignment="Center"
                    HorizontalAlignment="Center"/>
 
-        <Border Background="White" 
-                Padding="10" 
-                HorizontalAlignment="Center"
+        <!-- <Border Background="White" -->
+        <!--         Padding="10" -->
+        <!--         HorizontalAlignment="Center" -->
+        <!--         CornerRadius="5"> -->
+        <!--     ~1~ <Image Source="{Binding QrCodeSvg}" @1@ -->
+        <!--     ~1~        Width="200" @1@ -->
+        <!--     ~1~        Height="200" @1@ -->
+        <!--     ~1~        Stretch="Uniform"/> @1@ -->
+        <!--     ~1~ <Svg Path="{Binding QrCodeUrl}"/> @1@ -->
+        <!--     <Image Width="265" Height="265" Stretch="Uniform"> -->
+        <!--         <Image.Source> -->
+        <!--             <SvgImage Source="{DynamicResource QrCodeSvg}" Css="path { fill: #000000; } rect { fill: #FFFFFFFF; }"/> -->
+        <!--         </Image.Source> -->
+        <!--     </Image> -->
+        <!-- </Border> -->
+        <Border Background="White"
+                Padding="10"
                 CornerRadius="5">
-            <Image Source="{Binding QrCodeSvg}" 
-                   Width="200" 
-                   Height="200"
-                   Stretch="Uniform"/>
+            <svg:Svg Source="{Binding QrCodeSvg}"
+                     Width="265" Height="265"/>
         </Border>
 
         <TextBlock Text="{Binding StatusMessage}" 
@@ -42,26 +57,26 @@
                    IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
         <StackPanel Orientation="Horizontal" 
-                    HorizontalAlignment="Center" 
-                    Spacing="10"
-                    IsVisible="{Binding IsSuccess}">
+                     HorizontalAlignment="Center" 
+                     Spacing="10"
+                     IsVisible="{Binding IsSuccess}">
             <Border Width="40" 
-                    Height="40" 
-                    CornerRadius="20"
-                    ClipToBounds="True"
-                    IsVisible="{Binding UserAvatarUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                     Height="40" 
+                     CornerRadius="20"
+                     ClipToBounds="True"
+                     IsVisible="{Binding UserAvatarUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                 <Image Source="{Binding UserAvatarUrl}"
-                       Stretch="UniformToFill"/>
+                        Stretch="UniformToFill"/>
             </Border>
             <TextBlock Text="{Binding UserDisplayName}"
-                       VerticalAlignment="Center"
-                       FontWeight="Bold"/>
+                        VerticalAlignment="Center"
+                        FontWeight="Bold"/>
         </StackPanel>
 
         <Button Content="Отмена" 
-                Command="{Binding CancelCommand}"
-                HorizontalAlignment="Center"
-                IsVisible="{Binding IsPolling}"/>
+                 Command="{Binding CancelCommand}"
+                 HorizontalAlignment="Center"
+                 IsVisible="{Binding IsPolling}"/>
     </StackPanel>
 
 </UserControl>

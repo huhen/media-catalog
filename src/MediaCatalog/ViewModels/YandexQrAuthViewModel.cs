@@ -1,13 +1,19 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Net.Mime;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediaCatalog.Services;
 using MediaCatalog.Shared.Services;
 using Avalonia.Svg.Skia;
+using CSharpFunctionalExtensions;
+using ShimSkiaSharp;
 
 namespace MediaCatalog.ViewModels;
 
@@ -16,32 +22,23 @@ public partial class YandexQrAuthViewModel : ViewModelBase, IDialogParticipant
     private readonly YandexMusicService _yandexMusicService;
     private CancellationTokenSource? _cts;
 
-    [ObservableProperty]
-    private SvgImage? _qrCodeSvg;
+    [ObservableProperty] private SvgImage? _qrCodeSvg;
 
-    [ObservableProperty]
-    private string _qrCodeUrl = "";
+    [ObservableProperty] private string _qrCodeUrl = "";
 
-    [ObservableProperty]
-    private string _statusMessage = "Загрузка QR-кода...";
+    [ObservableProperty] private string _statusMessage = "Загрузка QR-кода...";
 
-    [ObservableProperty]
-    private bool _isPolling;
+    [ObservableProperty] private bool _isPolling;
 
-    [ObservableProperty]
-    private bool _isSuccess;
+    [ObservableProperty] private bool _isSuccess;
 
-    [ObservableProperty]
-    private bool _isCompleted;
+    [ObservableProperty] private bool _isCompleted;
 
-    [ObservableProperty]
-    private string _errorMessage = "";
+    [ObservableProperty] private string _errorMessage = "";
 
-    [ObservableProperty]
-    private string _userDisplayName = "";
+    [ObservableProperty] private string _userDisplayName = "";
 
-    [ObservableProperty]
-    private string _userAvatarUrl = "";
+    [ObservableProperty] private string _userAvatarUrl = "";
 
     public bool WasSuccessful => IsSuccess;
 
@@ -59,18 +56,28 @@ public partial class YandexQrAuthViewModel : ViewModelBase, IDialogParticipant
 
         try
         {
-            var qrResult = await _yandexMusicService.GetAuthQRLinkAsync();
+            var qrUriResult = await _yandexMusicService.GetAuthQRLinkAsync();
+            if (qrUriResult.IsFailure)
+            {
+                ErrorMessage = qrUriResult.Error;
+                StatusMessage = "Ошибка получения QR-кода";
+                IsCompleted = true;
+                return;
+            }
+
+            QrCodeUrl = qrUriResult.Value;
+
+            var qrResult = await LoadQrCodeSvgAsync(qrUriResult.Value);
             if (qrResult.IsFailure)
             {
-                ErrorMessage = qrResult.Error;
+                ErrorMessage = qrUriResult.Error;
                 StatusMessage = "Ошибка загрузки QR-кода";
                 IsCompleted = true;
                 return;
             }
 
-            QrCodeUrl = qrResult.Value;
-            await LoadQrCodeSvgAsync(qrResult.Value);
-            
+            QrCodeSvg = qrResult.Value;
+
             StatusMessage = "Ожидание сканирования...";
 
             _cts = new CancellationTokenSource();
@@ -86,10 +93,13 @@ public partial class YandexQrAuthViewModel : ViewModelBase, IDialogParticipant
         {
             IsPolling = false;
             IsCompleted = true;
+
+            _cts?.Dispose();
+            _cts = null;
         }
     }
 
-    private async Task LoadQrCodeSvgAsync(string url)
+    private async Task<Result<SvgImage, string>> LoadQrCodeSvgAsync(string url)
     {
         try
         {
@@ -97,17 +107,29 @@ public partial class YandexQrAuthViewModel : ViewModelBase, IDialogParticipant
             // var response = await httpClient.GetAsync(url);
             // response.EnsureSuccessStatusCode();
             //
-            // var svgContent = await response.Content.ReadAsStreamAsync();
-            
-            QrCodeSvg = new SvgImage
+            // var svgContent = await response.Content.ReadAsStringAsync();
+
+            var svgSource = SvgSource.Load(url);
+
+            var isDarkTheme = Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
+            if (isDarkTheme)
             {
-                // Source = SvgSource.LoadFromStream(svgContent)
-                Source = SvgSource.Load(url)
-            };
+                foreach (var cmd in svgSource.Svg?.Model?.Commands?.OfType<DrawPathCanvasCommand>() ?? [])
+                {
+                    if (cmd.Paint?.Color is not null)
+                    {
+                        cmd.Paint.Color = new SKColor(255, 255, 255, 255);
+                    }
+                }
+
+                svgSource.RebuildFromModel();
+            }
+
+            return new SvgImage { Source = svgSource };
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Ошибка загрузки QR-кода: {ex.Message}";
+            return Result.Failure<SvgImage, string>(ex.Message);
         }
     }
 
@@ -117,43 +139,40 @@ public partial class YandexQrAuthViewModel : ViewModelBase, IDialogParticipant
         {
             try
             {
-                while (!cancellationToken.IsCancellationRequested)
+                await Task.Delay(1000, cancellationToken);
+
+                var qrStatus = await _yandexMusicService.AuthorizeByQRAsync();
+
+                if (qrStatus.Status != Yandex.Music.Api.Models.Account.YAuthStatus.Ok)
+                    continue;
+
+                StatusMessage = "Авторизация успешна!";
+                IsSuccess = true;
+
+                var tokenResult = await _yandexMusicService.GetAccessTokenAsync();
+                if (tokenResult.IsFailure)
                 {
-                    var qrStatus = await _yandexMusicService.AuthorizeByQRAsync();
-
-                    if (qrStatus.Status == Yandex.Music.Api.Models.Account.YAuthStatus.Ok)
-                    {
-                        StatusMessage = "Авторизация успешна!";
-                        IsSuccess = true;
-
-                        var tokenResult = await _yandexMusicService.GetAccessTokenAsync();
-                        if (tokenResult.IsFailure)
-                        {
-                            ErrorMessage = tokenResult.Error;
-                            StatusMessage = "Ошибка получения токена";
-                            return;
-                        }
-
-                        var loginResult = await _yandexMusicService.GetLoginInfoAsync();
-                        if (loginResult.IsFailure)
-                        {
-                            ErrorMessage = loginResult.Error;
-                            StatusMessage = "Ошибка получения информации о пользователе";
-                            return;
-                        }
-
-                        var loginInfo = loginResult.Value;
-                        UserDisplayName = !string.IsNullOrWhiteSpace(loginInfo.DisplayName)
-                            ? loginInfo.DisplayName
-                            : loginInfo.Login ?? "Пользователь";
-
-                        UserAvatarUrl = loginInfo.AvatarUrl;
-
-                        return;
-                    }
-
-                    await Task.Delay(1000, cancellationToken);
+                    ErrorMessage = tokenResult.Error;
+                    StatusMessage = "Ошибка получения токена";
+                    return;
                 }
+
+                var loginResult = await _yandexMusicService.GetLoginInfoAsync();
+                if (loginResult.IsFailure)
+                {
+                    ErrorMessage = loginResult.Error;
+                    StatusMessage = "Ошибка получения информации о пользователе";
+                    return;
+                }
+
+                var loginInfo = loginResult.Value;
+                UserDisplayName = !string.IsNullOrWhiteSpace(loginInfo.DisplayName)
+                    ? loginInfo.DisplayName
+                    : loginInfo.Login ?? "Пользователь";
+
+                UserAvatarUrl = loginInfo.AvatarUrl;
+
+                return;
             }
             catch (OperationCanceledException)
             {
